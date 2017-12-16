@@ -1,0 +1,5 @@
+name = EZW OFAC check vendor
+description = OFAC check vendor
+core = 7.x
+package = EZW
+version = 7.x-1.14

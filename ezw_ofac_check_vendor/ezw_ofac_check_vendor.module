@@ -1,0 +1,48 @@
+<?php
+/**
+ * @file
+ * Code for Using API to past user check information.
+ */
+
+/**
+ * Implements hook_user_insert().
+ */
+function ezw_ofac_check_vendor_user_insert(&$edit, $account, $category) {	
+  $uid = $edit['uid'];
+  $name = $edit['field_first_name']['und'][0]['value'] . ' ' . $edit['field_last_name']['und'][0]['value'];
+  $company = $edit['field_company']['und'][0]['value'];
+  $address = $edit['field_postal_address']['und'][0]['administrative_area'] . ', ' . $edit['field_postal_address']['und'][0]['country'];
+  $country = $edit['field_postal_address']['und'][0]['country'];
+	
+  $restricted_array = array("Self", "Home", "No", "Personal", "None", "Student", "Na", "Consultant", "Individual", "No company", "Non", "Private");
+	
+  if(in_array(strtolower($company), array_map("strtolower", $restricted_array))) {
+    $company = "";
+  }
+  $post_array = array(
+    'sSecno'      		=> '',
+    'sPassword'        	=> '',
+    'sOptionalID'           => $uid,
+    'sName'   		=> $name,
+    'sCompany'   		=> $company,
+    'sAddress'   		=> $address,
+    'sCountry'   		=> $country,
+    'sModes'   			=> '',
+    'sRPSGroupBypass'   => ''
+  );
+	
+  $post_query = http_build_query($post_array);
+	
+  $url = 'https://eim2.visualcompliance.com/RPS/RPSService.asmx/WebSearch';
+	
+  try {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $post_query);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    $response = curl_exec($ch);
+    curl_close($ch);
+  }catch(Exception $ex){
+    print_r($ex);
+  }
+}
